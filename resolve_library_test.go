@@ -37,6 +37,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func testSelection(include string, arch *types.Platform, libs ...*types.Library) *types.Library {
+	ctx := &types.Context{
+		HeaderToLibraries:          map[string][]*types.Library{include: libs},
+		ImportedLibraries:          []*types.Library{},
+		ActualPlatform:             arch,
+		TargetPlatform:             arch,
+		LibrariesResolutionResults: map[string]types.LibraryResolutionResult{},
+	}
+	return ResolveLibrary(ctx, include)
+}
+
+func TestArchPriority(t *testing.T) {
+	var bundleServo = &types.Library{Name: "Servo", Archs: []string{"avr", "sam", "samd"}}
+	var userServo = &types.Library{Name: "Servo", Folder: "sketchbook", Archs: []string{"avr", "sam", "samd"}}
+	var userServoNonAvr = &types.Library{Name: "Servo", Folder: "sketchbook", Archs: []string{"sam", "samd"}}
+	var userAnotherServo = &types.Library{Name: "AnotherServo", Folder: "sketchbook", Archs: []string{"avr", "sam", "samd", "esp32"}}
+
+	avr := &types.Platform{PlatformId: "avr"}
+	esp32 := &types.Platform{PlatformId: "esp32"}
+
+	res := testSelection("Servo.h", avr, bundleServo, userServo)
+	require.NotNil(t, res)
+	require.Equal(t, userServo, res)
+
+	res = testSelection("Servo.h", avr, bundleServo, userServoNonAvr)
+	require.NotNil(t, res)
+	require.Equal(t, bundleServo, res)
+
+	res = testSelection("Servo.h", avr, bundleServo, userAnotherServo)
+	require.NotNil(t, res)
+	require.Equal(t, bundleServo, res)
+
+	res = testSelection("Servo.h", esp32, bundleServo, userAnotherServo)
+	require.NotNil(t, res)
+	require.Equal(t, userAnotherServo, res)
+}
+
 func TestFindBestLibraryWithHeader(t *testing.T) {
 	l1 := &types.Library{Name: "Calculus Lib"}
 	l2 := &types.Library{Name: "Calculus Lib-master"}
