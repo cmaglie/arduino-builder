@@ -53,6 +53,7 @@ func TestArchPriority(t *testing.T) {
 	var userServo = &types.Library{Name: "Servo", Folder: "sketchbook", Archs: []string{"avr", "sam", "samd"}}
 	var userServoNonAvr = &types.Library{Name: "Servo", Folder: "sketchbook", Archs: []string{"sam", "samd"}}
 	var userAnotherServo = &types.Library{Name: "AnotherServo", Folder: "sketchbook", Archs: []string{"avr", "sam", "samd", "esp32"}}
+	var userServoAllArch = &types.Library{Name: "Servo", Folder: "sketchbook", Archs: []string{"*"}}
 
 	avr := &types.Platform{PlatformId: "avr"}
 	esp32 := &types.Platform{PlatformId: "esp32"}
@@ -72,6 +73,10 @@ func TestArchPriority(t *testing.T) {
 	res = testSelection("Servo.h", esp32, bundleServo, userAnotherServo)
 	require.NotNil(t, res)
 	require.Equal(t, userAnotherServo, res)
+
+	res = testSelection("Servo.h", esp32, userServoAllArch, userAnotherServo)
+	require.NotNil(t, res)
+	require.Equal(t, userServoAllArch, res)
 }
 
 func TestFindBestLibraryWithHeader(t *testing.T) {
