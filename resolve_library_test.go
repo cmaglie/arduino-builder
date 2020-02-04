@@ -57,6 +57,7 @@ func TestArchPriority(t *testing.T) {
 
 	avr := &types.Platform{PlatformId: "avr"}
 	esp32 := &types.Platform{PlatformId: "esp32"}
+	esp8266 := &types.Platform{PlatformId: "esp8266"}
 
 	res := testSelection("Servo.h", avr, bundleServo, userServo)
 	require.NotNil(t, res)
@@ -74,9 +75,15 @@ func TestArchPriority(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, userAnotherServo, res)
 
-	res = testSelection("Servo.h", esp32, userServoAllArch, userAnotherServo)
+	res = testSelection("Servo.h", esp32, userAnotherServo, userServoAllArch)
 	require.NotNil(t, res)
 	require.Equal(t, userServoAllArch, res)
+
+	var bundleSDesp = &types.Library{Name: "SD", Archs: []string{"esp8266"}}
+	var userSDAllArch = &types.Library{Name: "SD", Folder: "sketchbook", Archs: []string{"*"}}
+	res = testSelection("SD.h", esp8266, userSDAllArch, bundleSDesp)
+	require.NotNil(t, res)
+	require.Equal(t, bundleSDesp, res)
 }
 
 func TestFindBestLibraryWithHeader(t *testing.T) {
